@@ -1,0 +1,9 @@
+@ Credit to Steveice10, AuroraWright
+.section agb.logo, "a0x7ff00000" @available custom flag mask
+"0004013800000202:0E51"=.+0x08052A12	@0B O3DS 6.0 0x000D7A12
+@"0004013800000202:0A10"=.+	@0A O3DS 4.0
+@"0004013800000202:0611"=.+	@09 O3DS ?
+@"0004013800000202:0207"=.+	@07 O3DS 3.0
+@"0004013820000202:12D0"=.+	@00 N3DS 8.1 0x000D8B8A
+.thumb
+	.byte	0x26
