@@ -13,7 +13,7 @@ OBJS=$(patsubst $(SOURCE)/%.S, $(BUILD)/%.o, $(wildcard $(SOURCE)/*.S))
 
 $(call DEPDIR,$(BUILD)/$(TARGET).elf $(OBJS))
 
-.PHONY: all clean
+.PHONY: all clean tools
 
 all: $(BUILD)/$(TARGET).elf
 
@@ -26,3 +26,6 @@ $(BUILD)/%.o: $(SOURCE)/%.S
 
 clean:
 	@rm -Rf build
+
+tools:
+	gcc tools/elfparse.c -Iinclude -std=c99 -o elfparse
