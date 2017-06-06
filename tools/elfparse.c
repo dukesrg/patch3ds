@@ -3,6 +3,12 @@
 #include <string.h>
 #include "elf.h"
 
+uint16_t sectionFind(Elf32_Shdr *sections, uint16_t count, char *section_names, char *name){
+	uint16_t i = 0;
+	for(i = count; i-- && strcmp(section_names + sections[i].sh_name, name););
+	return i;
+}
+
 void main(int argc, char *argv[]){
 	if(argc < 2) {
 		printf("Usage: %s <patches.elf>\n", argv[0]);
@@ -23,34 +29,30 @@ void main(int argc, char *argv[]){
 		return;
 	}
 
-	Elf32_Shdr *sectionheader = (Elf32_Shdr*)&data[elfheader->e_shoff];
+	Elf32_Shdr *sections = (Elf32_Shdr*)&data[elfheader->e_shoff];
 
-	uint32_t symbolssection = 0;
-	uint32_t symbolnamessection = 0;
-	char *sectionnames = &data[sectionheader[elfheader->e_shstrndx].sh_offset];
+	char *section_names = &data[sections[elfheader->e_shstrndx].sh_offset];
+
+	uint16_t symbol_section = sectionFind(sections, elfheader->e_shnum, section_names, ".symtab");
+	char *symbol_names = &data[sections[sectionFind(sections, elfheader->e_shnum, section_names, ".strtab")].sh_offset];
+
+	char *sectionnames = &data[sections[elfheader->e_shstrndx].sh_offset];
 	for(size_t i = 0; i < elfheader->e_shnum; i++){
-                char *sectionname = &sectionnames[sectionheader[i].sh_name];
+                char *sectionname = &sectionnames[sections[i].sh_name];
 		printf("Section #%d\n\tname:\t%s\n\tdata:\t", i, sectionname);
-                if(*sectionname == '.'){
-			printf("...");
-			if(!strcmp(sectionname, ".symtab"))
-				symbolssection = i;
-                        else if(!strcmp(sectionname, ".strtab"))
-				symbolnamessection = i;
-		}else
-	                for(size_t idx = 0; idx < sectionheader[i].sh_size; idx++)
-				printf("%02X ", data[sectionheader[i].sh_offset + idx]);
+                if(*sectionname != '.')
+	                for(size_t idx = 0; idx < sections[i].sh_size; idx++)
+				printf("%02X ", data[sections[i].sh_offset + idx]);
 		printf("\n");
 	}
 
 	printf("Symbols:\n");
 
-	Elf32_Sym *symbolheader = (Elf32_Sym*)&data[sectionheader[symbolssection].sh_offset];
-	uint32_t symbolscount = sectionheader[symbolssection].sh_size / sizeof(Elf32_Sym);
-	char *symbolnames = &data[sectionheader[symbolnamessection].sh_offset];
+	Elf32_Sym *symbolheader = (Elf32_Sym*)&data[sections[symbol_section].sh_offset];
+	uint32_t symbolscount = sections[symbol_section].sh_size / sizeof(Elf32_Sym);
 	for(size_t i = 0; i < symbolscount; i++)
                 if(symbolheader[i].st_info == 0) //skip non-locals
-			printf("%s - %s = %08X\n", &sectionnames[sectionheader[symbolheader[i].st_shndx].sh_name] , &symbolnames[symbolheader[i].st_name], symbolheader[i].st_value);
+			printf("%s - %s = %08X\n", &section_names[sections[symbolheader[i].st_shndx].sh_name] , &symbol_names[symbolheader[i].st_name], symbolheader[i].st_value);
 
 	return;
 }
