@@ -10,12 +10,15 @@ SOURCE	:= source
 TARGET	:= patches
 
 OBJS=$(patsubst $(SOURCE)/%.S, $(BUILD)/%.o, $(wildcard $(SOURCE)/*.S))
+OBJS=$(patsubst $(SOURCE)/%.S, $(BUILD)/%.o, $(wildcard $(SOURCE)/*.S))
 
 $(call DEPDIR,$(BUILD)/$(TARGET).elf $(OBJS))
 
-.PHONY: all clean tools
+.PHONY: all patches elfparse clean
 
-all: $(BUILD)/$(TARGET).elf
+all: patches elfparse
+
+patches: $(BUILD)/$(TARGET).elf
 
 $(BUILD)/patches.elf: $(OBJS)
 	$(call Q,LINK,$@)$(LD) --use-blx -i -Tpatches.ld --no-check-sections $^ -o $@
@@ -27,5 +30,5 @@ $(BUILD)/%.o: $(SOURCE)/%.S
 clean:
 	@rm -Rf build
 
-tools:
-	gcc tools/elfparse.c -Iinclude -std=c99 -o elfparse
+elfparse:
+	gcc $(SOURCE)/patch.c $(SOURCE)/elfparse.c -Iinclude -std=c99 -o $(BUILD)/elfparse
