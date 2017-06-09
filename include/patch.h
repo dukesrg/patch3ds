@@ -13,9 +13,9 @@ typedef struct {
 uint_fast16_t patchPreload(void *data);
 
 //get avaiable patch names for specified Title ID and Tile Version (or 0xFFFF for any version)
-uint_fast16_t patchFind(char **patch_names, uint_fast16_t count, uint64_t title_id, uint_fast16_t title_version);
+uint_fast16_t patchFind(char **names, uint64_t title_id, uint_fast16_t title_version);
 
 //get patch data record for specified patch names and Title ID and Title Version combination
-uint_fast16_t patchGet(patch_record *patch_data, char **patch_names, uint_fast16_t count, uint64_t title_id, uint_fast16_t title_version);
+uint_fast16_t patchGet(patch_record *patches, char **names, uint_fast16_t count, uint64_t title_id, uint_fast16_t title_version);
 
 #endif

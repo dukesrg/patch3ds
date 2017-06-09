@@ -20,7 +20,7 @@ Each patch is described in linker script with separate section. Section name its
 /*	 ^dependent patch sign					*/
 ```
 A set of local symbols is declared in each patch source file to define the patch load address for each firmware version. Symbol name is combined from title ID and title version to uniquely identify the firmware version. Since all patches uses the same set of title ID/version combinations, actual local symbols of different patches links to the same symbol names thus reducing the result ELF file.
-The absence of symbol with title ID/version combination of a target firmware version states that there is no such patch compatible with this firmware version. Also up to 11 bit flags could be used to identify various patch flavours (like as ARM9/11 or static/in RAM or pattern patching or number of external parameters or whatever):
+The absence of symbol with title ID/version combination of a target firmware version states that there is no such patch compatible with this firmware version. If patch load address is the same for all title versions, title version part of the symbol can be omitted. Also up to 11 bit flags could be used to identify various patch flavours (like as ARM9/11 or static/in RAM or pattern patching or number of external parameters or whatever) without breaking GNU tools compatibility or violating ELF format specification:
 ```
 .section ctr.signature.1, "a0x7ff00000" @available custom flag mask
 @	 ^internal name^   ^patch flags

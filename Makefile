@@ -1,4 +1,8 @@
-include common.mk
+ifeq ($(strip $(DEVKITARM)),)
+$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
+endif
+
+include $(DEVKITARM)/base_rules
 
 LD	:= arm-none-eabi-ld
 OBJCOPY	:= arm-none-eabi-objcopy
@@ -10,9 +14,8 @@ SOURCE	:= source
 TARGET	:= patches
 
 OBJS=$(patsubst $(SOURCE)/%.S, $(BUILD)/%.o, $(wildcard $(SOURCE)/*.S))
-OBJS=$(patsubst $(SOURCE)/%.S, $(BUILD)/%.o, $(wildcard $(SOURCE)/*.S))
 
-$(call DEPDIR,$(BUILD)/$(TARGET).elf $(OBJS))
+$(foreach f,$(OBJS),$(eval $f : | $(dir $f)D))
 
 .PHONY: all patches elfparse clean
 
@@ -31,4 +34,14 @@ clean:
 	@rm -Rf build
 
 elfparse:
-	gcc $(SOURCE)/patch.c $(SOURCE)/elfparse.c -Iinclude -std=c99 -o $(BUILD)/elfparse
+	$(call Q,GCC,$@)gcc $(SOURCE)/patch.c $(SOURCE)/elfparse.c -Iinclude -std=c99 -o $(BUILD)/elfparse
+
+%/D:
+	$(call Q,MKDIR,$(dir $@))mkdir -p $(dir $@)
+
+ifeq ($(V),1)
+Q =
+else
+Q = @echo '	$1	$2';
+endif
+

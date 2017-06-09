@@ -10,59 +10,62 @@ static Elf32_Sym *symbols;
 static char *symbol_names;
 static uint32_t symbols_count;
 
-uint_fast16_t sectionFind(char *name) {
-	uint_fast16_t i;
-	for (i = header->e_shnum; i-- && strcmp(section_names + sections[i].sh_name, name););
-	return i;
+uint_fast8_t symbolCompare(uint32_t sidx, char* dst) {
+        if (!(sidx = symbols[sidx].st_name))
+		return 0;
+	char *src = symbol_names + sidx;
+	size_t slen = strlen(src), dlen = strlen(dst);
+	return !strncmp(src, dst, slen < dlen ? slen : dlen);
 }
 
 uint_fast16_t patchPreload(void *data) {
+	if (*(uint32_t*)data != *(uint32_t*)ELFMAG)
+		return 0;
 	uint_fast16_t count = 0;
-	if (*(uint32_t*)data == *(uint32_t*)ELFMAG) {
-		header = (Elf32_Ehdr*)data;
-		sections = (Elf32_Shdr*)(data + header->e_shoff);
-		section_names = (char*)(data + sections[header->e_shstrndx].sh_offset);
-		for (size_t i = header->e_shnum; i--;)
-			if (section_names[sections[i].sh_name] && !strspn(section_names + sections[i].sh_name, ".:"))
-				count++;	
-		uint_fast16_t symbol_section = sectionFind(".symtab");
-        	symbols = (Elf32_Sym*)(data + sections[symbol_section].sh_offset);
-		symbol_names = (char*)(data + sections[sectionFind(".strtab")].sh_offset);
-		symbols_count = sections[symbol_section].sh_size / sizeof(*symbols);
-	}
+	header = (Elf32_Ehdr*)data;
+	sections = (Elf32_Shdr*)(data + header->e_shoff);
+	section_names = (char*)(data + sections[header->e_shstrndx].sh_offset);
+	for (size_t i = header->e_shnum; --i;)
+		if (!sections[i].sh_name)
+			continue;
+		else if (!strcmp(section_names + sections[i].sh_name, ".symtab")) {
+	        	symbols = (Elf32_Sym*)(data + sections[i].sh_offset);
+			symbols_count = sections[i].sh_size / sizeof(*symbols);
+		} else if (!strcmp(section_names + sections[i].sh_name, ".strtab"))
+			symbol_names = (char*)(data + sections[i].sh_offset);
+		else if (!strspn(section_names + sections[i].sh_name, ".:"))
+			count++;
 	return count;
 }
 
-uint_fast16_t patchFind(char **patch_names, uint_fast16_t count, uint64_t title_id, uint_fast16_t title_version) {
+uint_fast16_t patchFind(char **names, uint64_t title_id, uint_fast16_t title_version) {
+	uint_fast16_t count = 0;
 	char id[21];
-	uint_fast8_t patch_mask[header->e_shnum];
-        memset(patch_mask, 0, sizeof(patch_mask));
-	snprintf(id, title_version == 0xFFFF ? 17 : sizeof(id), "%016llX%04hX", title_id, title_version);
-	for (size_t i = 0; i < symbols_count; i++)
-		if (section_names[sections[symbols[i].st_shndx].sh_name] != ':' && !strncmp(symbol_names + symbols[i].st_name, id, strlen(id)))
-			patch_mask[symbols[i].st_shndx] = 1;
-	for (size_t  i = 0; i < header->e_shnum; i++)
-		if (patch_mask[i])
-			patch_names[count++] = section_names + sections[i].sh_name;
+	uint_fast8_t mask[header->e_shnum];
+        memset(mask, 0, sizeof(mask));
+	snprintf(id, title_version == 0xFFFF ? 17 : 21, "%016llX%04hX", title_id, title_version);
+	for (size_t i = symbols_count; --i;)
+		if (section_names[sections[symbols[i].st_shndx].sh_name] != ':' && symbolCompare(i, id))
+			mask[symbols[i].st_shndx] = 1;
+	for (size_t i = 1; i < header->e_shnum; i++)
+		if (mask[i])
+			names[count++] = section_names + sections[i].sh_name;
 	return count;
 }
 
-uint_fast16_t patchGet(patch_record *patch_data, char **patch_names, uint_fast16_t count, uint64_t title_id, uint_fast16_t title_version) {
+uint_fast16_t patchGet(patch_record *patches, char **names, uint_fast16_t count, uint64_t title_id, uint_fast16_t title_version) {
 	char id[21];
-	uint_fast16_t section_idx, patch_idx = 0;
-	snprintf(id, sizeof(id), "%016llX%04hX", title_id, title_version);
-	for (size_t i = 0; i < count; i++)
-		if((section_idx = sectionFind(patch_names[i])))
-			do {
-				for (size_t j = 0; j < symbols_count; j++)
-					if (symbols[j].st_shndx == section_idx && !strcmp(symbol_names + symbols[j].st_name, id)) {
-						patch_data[patch_idx].address = symbols[j].st_value;
-						patch_data[patch_idx].size = sections[section_idx].sh_size;
-						patch_data[patch_idx].data = (void*)header + sections[section_idx].sh_offset;
-						patch_idx++;
-						break;
-					}
-				section_idx++;
-			} while(section_names[sections[section_idx].sh_name] == ':');
-	return patch_idx;
+	uint_fast8_t mask[header->e_shnum];
+        memset(mask, 0, sizeof(mask));
+	sprintf(id, "%016llX%04hX", title_id, title_version);
+	while(count--)
+		for (size_t j = header->e_shnum; --j;)
+ 			if (!strcmp(section_names + sections[j].sh_name, names[count])) {
+				for (mask[j++] = 1; j < header->e_shnum && section_names[sections[j].sh_name] == ':'; mask[j++] = 1);
+				break;
+			}
+	for (size_t i = symbols_count; --i;)
+		if (mask[symbols[i].st_shndx] && symbolCompare(i, id))
+			patches[++count] = (patch_record){symbols[i].st_value, sections[symbols[i].st_shndx].sh_size, (void*)header + sections[symbols[i].st_shndx].sh_offset};
+	return ++count;
 }
