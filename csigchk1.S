@@ -1,5 +1,5 @@
 @ Credit to mid-kid
-.section ctr.signature.1, "a0x7ff00000" @available custom flag mask
+.section ctr.signature.1, "a"
 "00040138000000026F60"=.+0x08062BF8	@5E O3DS 11.4
 "00040138000000026B54"=.+0x08062BE4	@5C O3DS 11.3
 @"00040138000000026740"=.+0x	@58 O3DS 11.2

@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "patch.h"
+#include "patch3ds.h"
 
 void main(int argc, char *argv[]) {
 	if (argc < 2) {
@@ -14,11 +14,16 @@ void main(int argc, char *argv[]) {
 	fread(data, sizeof(data), 1, fp);
 	fclose(fp);
 
-	uint_fast16_t max_patches = patchPreload(data, SECTION_FILTER_PATCHES);
+	uint_fast16_t max_patches = patchPreload(data);
         if (!max_patches) {
 		printf("Invalid ELF file or no patch sections found!");
 		return;
 	}
+	
+	printf("Patches build version: %08x\n", patchGetParameter("Version"));	
+
+	uint32_t value = 0xc0decafe;
+	patchSetParameterData("Param_nandSector", &value);
 
 	printf("Patches avaiable for o3DS:\n");	
 	char *patch_names[max_patches];

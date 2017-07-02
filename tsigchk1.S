@@ -1,5 +1,5 @@
 @ Credit to Roxas75, Steveice10, AuroraWright
-.section twl.signature.main, "a0x7ff00000" @available custom flag mask
+.section twl.signature.main, "a0x00000000"
 "00040138000001022271"=.+0x80182C0	@16 O3DS 6.2 0x001650C0
 @"00040138000001021E52"=.+	@14 O3DS 6.0
 @"00040138000001021A30"=.+	@12 O3DS 4.5
