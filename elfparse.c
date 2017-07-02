@@ -14,7 +14,7 @@ void main(int argc, char *argv[]) {
 	fread(data, sizeof(data), 1, fp);
 	fclose(fp);
 
-	uint_fast16_t max_patches = patchPreload(data);
+	uint_fast16_t max_patches = patchPreload(data, SECTION_FILTER_PATCHES);
         if (!max_patches) {
 		printf("Invalid ELF file or no patch sections found!");
 		return;

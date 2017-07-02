@@ -18,7 +18,7 @@ uint_fast8_t symbolCompare(uint32_t sidx, char* dst) {
 	return !strncmp(src, dst, slen < dlen ? slen : dlen);
 }
 
-uint_fast16_t patchPreload(void *data) {
+uint_fast16_t patchPreload(void *data, section_filter filter) {
 	if (*(uint32_t*)data != *(uint32_t*)ELFMAG)
 		return 0;
 	uint_fast16_t count = 0;
@@ -33,7 +33,7 @@ uint_fast16_t patchPreload(void *data) {
 			symbols_count = sections[i].sh_size / sizeof(*symbols);
 		} else if (!strcmp(section_names + sections[i].sh_name, ".strtab"))
 			symbol_names = (char*)(data + sections[i].sh_offset);
-		else if (!strspn(section_names + sections[i].sh_name, ".:"))
+		else if (filter == SECTION_FILTER_ALL || !strspn(section_names + sections[i].sh_name, ".:"))
 			count++;
 	return count;
 }
