@@ -1,5 +1,5 @@
 @ Credit to TuxSH, Steveice10, AuroraWright
-.section twl.card.save_type, "a0x40000000"
+.section twl.card.save_type, "a"
 "00040138000001022271"=.+0x08027F5E	@16 O3DS 6.2 0x00174D5E
 @"00040138000001021E52"=.+0x	@14 O3DS 6.0
 @"00040138000001021A30"=.+0x	@12 O3DS 4.5
