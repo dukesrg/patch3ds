@@ -6,7 +6,7 @@
 #define SHF_3DS_DEPENDS	0x40000000
 
 typedef struct {
-	void *address;
+	uint32_t address;
 	void *data;
 	uint32_t size;
 } patch_record;
