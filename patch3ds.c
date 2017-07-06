@@ -110,6 +110,6 @@ uint_fast16_t patchGet(patch_record *patches, char **names, uint_fast16_t count,
 		if (symbols[i].st_shndx < SHN_LORESERVE &&
 			mask[symbols[i].st_shndx] &&
 			symcmpmin(i, id)
-		) patches[++count] = (patch_record){symbols[i].st_value, sections[symbols[i].st_shndx].sh_size, (void*)header + sections[symbols[i].st_shndx].sh_offset};
+		) patches[++count] = (patch_record){(void*)symbols[i].st_value, (void*)header + sections[symbols[i].st_shndx].sh_offset, sections[symbols[i].st_shndx].sh_size};
 	return ++count;
 }

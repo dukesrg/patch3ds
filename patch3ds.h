@@ -6,10 +6,10 @@
 #define SHF_3DS_DEPENDS	0x40000000
 
 typedef struct {
-	uint32_t address;
-	uint32_t size;
+	void *address;
 	void *data;
-} __attribute__((packed)) patch_record;
+	uint32_t size;
+} patch_record;
 
 #define PATCH_TITLE_VERSION_ANY	0xFFFF
 
