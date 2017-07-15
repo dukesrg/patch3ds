@@ -15,6 +15,10 @@ TARGET	:= patches
 
 OBJS=$(patsubst %.S, %.o, $(wildcard *.S))
 
+DEPSDIR=.deps
+
+$(shell mkdir -p $(DEPSDIR))
+
 .PHONY: all patches readpatch3ds clean
 
 all: patches readpatch3ds
@@ -29,7 +33,7 @@ $(TARGET).elf: $(OBJS)
 	$(call Q,CPPAS,$@)$(CC) -mcpu=arm946e-s $(CFLAGS) $^ -c -o $@
 
 clean:
-	@rm -f *.o *.elf readpatch3ds readpatch3ds.exe
+	@rm -rf *.o *.elf readpatch3ds readpatch3ds.exe .deps
 
 readpatch3ds:
 	$(call Q,GCC,$@)gcc patch3ds.c readpatch3ds.c -std=c99 -o readpatch3ds
